@@ -39,6 +39,7 @@ if __name__ == '__main__':
 
 
     # question 18-20
+    # buggy, I don't know where I got wrong
     X_train, y_train = read_data('data/quiz1-18-train.dat')
     X_test, y_test = read_data('data/quiz1-18-test.dat')
     coeff = [-1, 1]

@@ -17,12 +17,12 @@ def read_data(filename):
 
 
 if __name__ == '__main__':
-    # question 15
+    # q15
     #X, y = read_data('data/quiz1-15-train.dat')
     #pla.pla_train(X, y, verbose=True, random=False)
 
 
-    # question 16-17
+    # q16-17
     #X, y = read_data('data/quiz1-15-train.dat')
     #n = 2000
     #update_total = 0
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     #print(update_total*1.0 / n)
 
 
-    # question 18-20
+    # q18-20
     # buggy, I don't know where I got wrong
     X_train, y_train = read_data('data/quiz1-18-train.dat')
     X_test, y_test = read_data('data/quiz1-18-test.dat')

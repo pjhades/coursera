@@ -4,7 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# question 3
+# q3
 def estimate_vc_sample_size(N, dvc, epsilon, delta):
     while True:
         estimate = 8.0/np.power(epsilon, 2) * np.log(4.0 * np.power(2.0*N, dvc) / delta)
@@ -13,7 +13,7 @@ def estimate_vc_sample_size(N, dvc, epsilon, delta):
         N = estimate
 
 
-# question 4
+# q4
 def compare_bounds(N, dvc, delta):
     # growth function
     def m(n):

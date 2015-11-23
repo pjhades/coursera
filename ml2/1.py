@@ -123,11 +123,10 @@ def q16_17():
 
     for goal in [0, 2, 4, 6, 8]:
         y = set_binlabel(y_train, goal)
-        svm = sklearn.svm.SVC(C=0.01, kernel='poly', degree=2, coef0=1)
+        svm = sklearn.svm.SVC(C=0.01, kernel='poly', degree=2, coef0=1, gamma=1)
         svm.fit(X_train, y)
         ein = get_error(svm, X_train, y)
         print('{0} vs not {0}, ein={1}'.format(goal, ein), end=', ')
-        # FIXME fuck this, don't know why
         print('sum of alphas={0}'.format(np.sum(np.abs(svm.dual_coef_))))
 
 

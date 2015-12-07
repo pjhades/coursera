@@ -5,6 +5,8 @@ import scipy as sp
 import numpy as np
 from scipy import linalg
 
+from sklearn import kernel_ridge
+
 def load_data(filepath):
     X = []
     y = []
@@ -126,28 +128,28 @@ def adaboost_train(X, y, n_iter):
     return _decision
 
 
-def get_gram(X, kernel):
-    N = X.shape[0]
-    K = []
-    for x1 in X:
-        for x2 in X:
-            K.append(kernel(x1, x2))
-    return np.array(K).reshape(N, N)
-
-
 def make_rbf(gamma):
     def _rbf(x1, x2):
-        return np.exp(-gamma * np.power(linalg.norm(x1 - x2), 2.)) + 1.
+        return np.exp(-gamma * np.power(linalg.norm(x1 - x2), 2.))
     return _rbf
 
 
-def ridgereg_train(X, y, kernel, lambd):
+def kernel_ridge_train(X, y, gamma, lambd):
+    kernel = make_rbf(gamma)
     N = X_train.shape[0]
-    K = get_gram(X, kernel)
-    return linalg.inv(lambd * sp.identity(N) + K).dot(y)
+
+    K = []
+    for i in range(N):
+        for j in range(N):
+            K.append(kernel(X[i], X[j]))
+    K = np.array(K).reshape(N, N)
+    beta = linalg.inv(lambd * np.identity(N) + K).dot(y)
+
+    return beta
 
 
-def ridgereg_test(beta, X_train, y_train, X_test, y_test, kernel):
+def kernel_ridge_test(beta, X_train, y_train, X_test, y_test, gamma):
+    kernel = make_rbf(gamma)
     N = X_train.shape[0]
     errors = []
 
@@ -155,11 +157,29 @@ def ridgereg_test(beta, X_train, y_train, X_test, y_test, kernel):
         M = X.shape[0]
         err = 0.
         for i in range(M):
-            z = []
+            score = 0.
             for j in range(N):
-                z.append(kernel(X_train[j], X[i]))
-            z = np.array(z)
-            if y[i] != np.sign(beta.dot(z)):
+                score += beta[j] * kernel(X_train[j], X[i])
+            if y[i] != np.sign(score):
+                err += 1
+        errors.append(err*1. / M)
+    return errors
+
+
+def kernel_ridge_train_cheat(X, y, gamma, lambd):
+    kr = kernel_ridge.KernelRidge(alpha=lambd*.5, kernel='rbf', gamma=gamma)
+    kr.fit(X, y)
+    return kr
+
+
+def kernel_ridge_test_cheat(kr, X_train, y_train, X_test, y_test):
+    errors = []
+
+    for (X, y) in [(X_train, y_train), (X_test, y_test)]:
+        M = X.shape[0]
+        err = 0.
+        for i in range(M):
+            if y[i] != np.sign(kr.predict(X[i])):
                 err += 1
         errors.append(err*1. / M)
     return errors
@@ -176,17 +196,18 @@ if __name__ == '__main__':
     #print('eout: {0:f}'.format(get_error(X_test, y_test, g)))
 
     # q19-20
-    X, y = load_data('/Users/pjhades/code/lab/ml/ridgereg.dat')
+    X, y = load_data('/Users/pjhades/code/lab/ml/kernel_ridge.dat')
     X_train, y_train, X_test, y_test = split_data(X, y, 400)
 
-    ein_min = 1.
-    eout_min = 1.
     for gamma in [32., 2., 0.125]:
-        kernel = make_rbf(gamma)
         for lambd in [0.001, 1., 1000.]:
             print('gamma: {0}, lambda: {1}'.format(gamma, lambd), end='  ')
-            beta = ridgereg_train(X_train, y_train, kernel, lambd)
-            ein, eout = ridgereg_test(beta, X_train, y_train, X_test, y_test, kernel)
-            print('ein: {0}, eout: {1}'.format(ein, eout))
 
+            beta = kernel_ridge_train(X_train, y_train, gamma, lambd)
+            ein, eout = kernel_ridge_test(beta, X_train, y_train, X_test, y_test, gamma)
+
+            #kr = kernel_ridge_train_cheat(X_train, y_train, gamma, lambd)
+            #ein, eout = kernel_ridge_test_cheat(kr, X_train, y_train, X_test, y_test)
+
+            print('ein: {0}, eout: {1}'.format(ein, eout))
 

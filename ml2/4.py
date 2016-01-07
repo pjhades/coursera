@@ -65,7 +65,6 @@ def get_error(X, y, f):
 
 
 def d_tanh(x):
-    #return np.cosh(x) ** -2.
     return 1. - np.tanh(x)**2
 
 

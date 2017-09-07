@@ -1,3 +1,5 @@
+require 'set'
+
 def from_hex_str(s)
     s.each_char.each_slice(2).map{|x, y| (x+y).to_i(16)}
 end
@@ -23,6 +25,15 @@ $ciphers = [
 $key = [0] * 1024
 $space = 0x20
 
+$pairs = Set.new()
+open('./ulysses.txt').each_line do |line|
+    line.chomp.downcase.gsub(/ +/, ' ').chars.each_cons(2) do |pair|
+        if !$pairs.member?(pair.join)
+            $pairs.add(pair.join)
+        end
+    end
+end
+
 def to_hex(m)
     m.chars.map{|x| x.ord}
 end
@@ -36,37 +47,9 @@ def xor(a, b)
     a.zip(b[0...a.length]).map{|x, y| x^y}
 end
 
-# This is really ugly, as we try to enumerate [nearly] all
-# possible two-character combinations in readable English.
-# A better way should be to get this from a corpus.
 def readable_english?(m)
-    return false if m.any?{|byte| byte.chr !~ /[A-Za-z ,.':!?()-]/}
-    return false if m.each_cons(2).map{|x, y| x.chr.downcase + y.chr.downcase}
-                     .any?{|pair| pair !~ /(
-                        [aeiou][a-z] | [a-z][aeiou] |
-                        bl|bo|br|bs|by|
-                        cc|ch|ck|cl|cq|cr|cs|ct|cy|
-                        dd|dg|dl|dr|ds|dy|
-                        ff|fl|fr|fs|ft|
-                        gh|gl|gm|gn|gr|gs|gy|
-                        kl|km|kn|kr|ks|ky|
-                        ld|lf|lg|lk|lm|ln|lp|lr|ls|lt|ly|
-                        mm|mn|mp|mr|ms|mt|my|
-                        nl|ng|nm|nn|ns|nt|
-                        pf|pl|pm|pn|pp|pr|ps|pt|py|
-                        rd|rf|rg|rk|rl|rm|rn|rp|rq|rr|rs|rt|
-                        sc|sk|sl|sm|sn|sp|sq|ss|st|sy|
-                        th|tr|ts|tt|ty|tw|
-                        wh|wr|ws|
-                        xf|xt|
-                        yd|yp|ys|
-                        zh|
-                        's|s'|'[ ]|e'|'t|w'|y'|o'|n'|
-                        [a-z) ][ ,.:!?]|[,.:!?][ ]|[ ][a-z(]|
-                        \([a-z]|[a-z]\)|
-                        [a-z]-|-[a-z]
-                     )/x}
-    return true
+    m.each_cons(2).map{|x, y| (x.chr + y.chr).downcase}
+                  .all?{|pair| $pairs.member?(pair)}
 end
 
 def try_key_byte(idx, key_byte)
@@ -78,7 +61,12 @@ end
 def try_key(start, len, key_piece)
     $ciphers.map{|c| c[start...start+len]}
             .select{|c| c && !c.empty?}
-            .all?{|c| readable_english?(xor(c, key_piece))}
+            .count do |c|
+                x = xor(c, key_piece)
+                r = readable_english?(x)
+                puts "#{to_ascii_str(x)}    #{r}"
+                r
+            end >= ($ciphers.length * 0.9).to_i
 end
 
 def decrypt_all
@@ -135,5 +123,7 @@ def crib_dragging(crib)
 end
 
 crack_by_space
-['The ', ' the ', ' would ', ' are ', ' message ', 'When '].each{|crib| crib_dragging(crib)}
+[' a ', 'A ', 'The ', ' the ', ' and ', ' are ', ' cipher',
+ ' would ', ' message ', 'When ', ' that ', ' a lot of ',
+ ' using ', ' stream ', ' cryptography ', 'more than once'].each{|crib| crib_dragging(crib)}
 decrypt_all

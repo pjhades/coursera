@@ -1,16 +1,8 @@
-extern crate openssl;
-
+use crypto::hex_to_u8;
 use openssl::symm::{Cipher, decrypt};
 use std::str;
-use std::vec::Vec;
 
-fn hex_to_u8(s: &&str) -> Vec<u8> {
-    s.as_bytes().chunks(2).map(|chunk| {
-        u8::from_str_radix(str::from_utf8(&chunk).unwrap(), 16).unwrap()
-    }).collect()
-}
-
-fn main() {
+pub fn solve() {
     let kc = &[("140b41b22a29beb4061bda66b6747e14",
                 "4ca00ff4c898d61e1edbf1800618fb28\
                  28a226d160dad07883d04e008a7897ee\

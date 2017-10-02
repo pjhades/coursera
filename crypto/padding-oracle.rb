@@ -54,18 +54,15 @@ def main
             end
 
             # If we got 404 we would be sure that such guessed byte
-            # was correct. Otherwise if we got 200 but no 404, althought
+            # was correct. Otherwise if we got 200 but no 404, although
             # the guess was cancelled with padding under XOR, we should
             # know that this byte was the only possible correct one.
             byte = result.index(404)
-            if byte
-                guess[blk_idx * 16 + byte_idx] = byte
-                plain[blk_idx * 16 + byte_idx] = byte
-            else
+            if !byte
                 byte = result.index(200)
-                guess[blk_idx * 16 + byte_idx] = byte
-                plain[blk_idx * 16 + byte_idx] = byte
             end
+            guess[blk_idx * 16 + byte_idx] = byte
+            plain[blk_idx * 16 + byte_idx] = byte
 
             puts "blk #{blk_idx} byte #{byte_idx}"
             puts to_hex_str(plain)
